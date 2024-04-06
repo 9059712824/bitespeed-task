@@ -24,9 +24,17 @@ public class ContactServiceImpl implements ContactService {
         List<Contact> contactsByPhoneNumber = requestDto.getPhoneNumber() == null ? Collections.emptyList() : contactRepository.getByPhoneNumber(requestDto.getPhoneNumber());
 
         List<Contact> allContacts = new ArrayList<>();
-
         allContacts.addAll(contactsByEmail);
         allContacts.addAll(contactsByPhoneNumber);
+
+        if (allContacts.isEmpty()) {
+            allContacts.add(contactRepository.save(Contact.builder()
+                    .id((int) (contactRepository.count() + 1))
+                    .email(requestDto.getEmail())
+                    .phoneNumber(requestDto.getPhoneNumber())
+                    .linkPrecedence(LinkPrecedenceStatus.PRIMARY)
+                    .build()));
+        }
         allContacts.addAll(processContacts(allContacts));
 
         int primaryId = 0;
