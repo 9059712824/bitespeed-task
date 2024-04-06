@@ -23,12 +23,12 @@ public class ContactServiceImpl implements ContactService {
         List<Contact> contactsByEmail = requestDto.getEmail() == null ? Collections.emptyList() : contactRepository.getByEmail(requestDto.getEmail());
         List<Contact> contactsByPhoneNumber = requestDto.getPhoneNumber() == null ? Collections.emptyList() : contactRepository.getByPhoneNumber(requestDto.getPhoneNumber());
 
-        List<Contact> allContacts = new ArrayList<Contact>();
+        List<Contact> allContacts = new ArrayList<>();
 
         allContacts.addAll(contactsByEmail);
         allContacts.addAll(contactsByPhoneNumber);
-        allContacts.addAll(processContcacts(contactsByEmail));
-        allContacts.addAll(processContcacts(contactsByPhoneNumber));
+        allContacts.addAll(processContacts(contactsByEmail));
+        allContacts.addAll(processContacts(contactsByPhoneNumber));
 
         int primaryId = 0;
         Set<Integer> secondaryIds = new HashSet<>();
@@ -62,21 +62,16 @@ public class ContactServiceImpl implements ContactService {
         return Collections.singletonList(contactInfoResponse);
     }
 
-    private List<Contact> processContcacts(List<Contact> contacts) {
+    private List<Contact> processContacts(List<Contact> contacts) {
         List<Contact> processedContacts = new ArrayList<>();
         for (Contact contact : contacts) {
             if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.PRIMARY)) {
-                var linkedList = contactRepository.getByLinkedId(contact.getId());
-                linkedList.forEach(list -> {
-                    System.out.println(list);
-                    processedContacts.add(list);
-                });
+                var linkedContacts = contactRepository.getByLinkedId(contact.getId());
+                processedContacts.addAll(linkedContacts);
             }
             if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.SECONDARY)) {
-                var linkedList = contactRepository.findById(contact.getLinkedId());
-                if (linkedList.isPresent()) {
-                    processedContacts.add(linkedList.get());
-                }
+                var linkedContacts = contactRepository.findById(contact.getLinkedId());
+                linkedContacts.ifPresent(processedContacts::add);
             }
         }
         return processedContacts;
