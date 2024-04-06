@@ -24,38 +24,12 @@ public class ContactServiceImpl implements ContactService {
         List<Contact> contactsByPhoneNumber = requestDto.getPhoneNumber() == null ? Collections.emptyList() : contactRepository.getByPhoneNumber(requestDto.getPhoneNumber());
 
         List<Contact> allContacts = new ArrayList<Contact>();
-        contactsByEmail.forEach(contact -> {
-            allContacts.add(contact);
-            if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.PRIMARY)) {
-                var linkedList = contactRepository.getByLinkedId(contact.getId());
-                linkedList.forEach(list -> {
-                    System.out.println(list);
-                    allContacts.add(list);
-                });
-            }
-            if(contact.getLinkPrecedence().equals(LinkPrecedenceStatus.SECONDARY)) {
-                var linkedList = contactRepository.findById(contact.getLinkedId());
-                if(linkedList.isPresent()) {
-                    allContacts.add(linkedList.get());
-                }
-            }
-        });
-        contactsByPhoneNumber.forEach(contact -> {
-            allContacts.add(contact);
-            if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.PRIMARY)) {
-                var linkedList = contactRepository.getByLinkedId(contact.getId());
-                linkedList.forEach(list -> {
-                    System.out.println(list);
-                    allContacts.add(list);
-                });
-            }
-            if(contact.getLinkPrecedence().equals(LinkPrecedenceStatus.SECONDARY)) {
-                var linkedList = contactRepository.findById(contact.getLinkedId());
-                if(linkedList.isPresent()) {
-                    allContacts.add(linkedList.get());
-                }
-            }
-        });
+
+        allContacts.addAll(contactsByEmail);
+        allContacts.addAll(contactsByPhoneNumber);
+        allContacts.addAll(processContcacts(contactsByEmail));
+        allContacts.addAll(processContcacts(contactsByPhoneNumber));
+
         int primaryId = 0;
         Set<Integer> secondaryIds = new HashSet<>();
         for (Contact contact : allContacts) {
@@ -86,5 +60,25 @@ public class ContactServiceImpl implements ContactService {
                 .build();
 
         return Collections.singletonList(contactInfoResponse);
+    }
+
+    private List<Contact> processContcacts(List<Contact> contacts) {
+        List<Contact> processedContacts = new ArrayList<>();
+        for (Contact contact : contacts) {
+            if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.PRIMARY)) {
+                var linkedList = contactRepository.getByLinkedId(contact.getId());
+                linkedList.forEach(list -> {
+                    System.out.println(list);
+                    processedContacts.add(list);
+                });
+            }
+            if (contact.getLinkPrecedence().equals(LinkPrecedenceStatus.SECONDARY)) {
+                var linkedList = contactRepository.findById(contact.getLinkedId());
+                if (linkedList.isPresent()) {
+                    processedContacts.add(linkedList.get());
+                }
+            }
+        }
+        return processedContacts;
     }
 }
