@@ -27,8 +27,7 @@ public class ContactServiceImpl implements ContactService {
 
         allContacts.addAll(contactsByEmail);
         allContacts.addAll(contactsByPhoneNumber);
-        allContacts.addAll(processContacts(contactsByEmail));
-        allContacts.addAll(processContacts(contactsByPhoneNumber));
+        allContacts.addAll(processContacts(allContacts));
 
         int primaryId = 0;
         Set<Integer> secondaryIds = new HashSet<>();
